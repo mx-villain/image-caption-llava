@@ -1,19 +1,22 @@
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, UploadFile, File
 import requests
+import base64
 
 app = FastAPI()
 
-@app.post("/review/")
-def review_code(code: str = Form(...)):
-    prompt = (
-        "You are a senior developer. Please review the following code for bugs, improvements, "
-        "and optimization tips:\n\n"
-        f"{code}"
-        )
+@app.post("/caption/")
+async def caption_image(file: UploadFile = File(...)):
+    image_bytes = await file.read()
+    image_base64 = base64.b64encode(image_bytes).decode("utf-8")
 
     response = requests.post(
         "http://localhost:11434/api/generate",
-        json={"model": "deepseek-coder", "prompt": prompt, "stream": False}
+        json={
+            "model": "llava",
+            "prompt": "Describe this image in one sentence.",
+            "images": [image_base64],
+            "stream": False
+        }
     )
     result = response.json()
-    return {"review": result["response"].strip()}
+    return {"caption": result["response"].strip()}

@@ -1,12 +1,16 @@
 import streamlit as st
 import requests
 
-st.title("Code Review Assistant (DeepSeek)")
+st.title("Image Caption Generator (LLaVA)")
 
-code_input = st.text_area("Paste your code here:", height=300)
+uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
 
-if st.button("Get Review"):
-    response = requests.post("http://localhost:8000/review/", data={"code": code_input})
-    review = response.json().get("review", "No feedback returned.")
-    st.subheader("Review & Suggestions:")
-    st.code(review)
+if uploaded_file is not None:
+    st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
+        
+    if st.button("Generate Caption"):
+        files = {"file": uploaded_file.getvalue()}
+        res = requests.post("http://localhost:8000/caption/", files=files)
+        caption = res.json().get("caption", "Error generating caption.")
+        st.subheader("Caption:")
+        st.write(caption)
